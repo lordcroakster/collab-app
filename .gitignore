@@ -1,0 +1,15 @@
+#venv
+.venv/
+
+#python generated files
+__pycache__/
+*.pyc
+
+#env variables
+.env
+
+#django local database
+db.sqlite3
+
+#vs code settings
+.vscode/
