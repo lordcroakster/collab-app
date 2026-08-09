@@ -21,7 +21,7 @@ def project_list(request):
     return JsonResponse(data, safe=False)
 
 @csrf_exempt
-def project_detail1(request, project_id):
+def project_detail(request, project_id):
     if request.method != "GET" and request.method != "DELETE" and request.method != "PUT":
         return JsonResponse({
             "error": "Method not allowed"
