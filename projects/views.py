@@ -82,6 +82,12 @@ def project_detail(request, project_id):
 
 @csrf_exempt
 def project_create(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            "error": "User not authenticated"
+        }, status=401)
+
+
     if request.method != "POST":
         return JsonResponse(
             {
@@ -93,6 +99,7 @@ def project_create(request):
     project=Project.objects.create(
         name=body["name"],
         description=body["description"],
+        owner=request.user
     )
 
     return JsonResponse({
