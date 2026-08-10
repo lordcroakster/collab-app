@@ -37,6 +37,7 @@ def project_detail(request, project_id):
     if request.method == "GET":
         return JsonResponse({
             "id": project.id,
+            "owner": project.owner.username,
             "name": project.name,
             "description": project.description,
             "created_at": project.created_at
@@ -44,6 +45,16 @@ def project_detail(request, project_id):
             )
 
     if request.method == "DELETE":
+        user=request.user
+        if not user.is_authenticated:
+            return JsonResponse({
+                "error": "User not authenticated"
+            },status=401)
+        if user != project.owner:
+            return JsonResponse({
+                "error": "User not authorized"
+            },status=403)
+        
         project.delete()
         return JsonResponse({
             "message": "Project delete"
