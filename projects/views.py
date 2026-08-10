@@ -82,24 +82,35 @@ def project_detail(request, project_id):
 
 @csrf_exempt
 def project_create(request):
-    if not request.user.is_authenticated:
-        return JsonResponse({
-            "error": "User not authenticated"
-        }, status=401)
-
-
     if request.method != "POST":
         return JsonResponse(
             {
                 "error": "method not allowed"
             }, status=405
         )
+
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            "error": "User not authenticated"
+        }, status=401)
+
+    try:
+        body=json.loads(request.body)
+        name=body["name"]
+        description=body["description"]
+    except json.JSONDecodeError:
+        return JsonResponse({
+            "error": "Invalid JSON"
+        }, status=400)
+    except KeyError:
+        return JsonResponse({
+            "error": "Fields are required"
+        },status=400)
     
-    body=json.loads(request.body)
     project=Project.objects.create(
-        name=body["name"],
-        description=body["description"],
-        owner=request.user
+        name=name,
+        description=description,
+        owner=request.user,
     )
 
     return JsonResponse({
