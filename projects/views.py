@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from .models import Project
+from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 import json
 
@@ -130,6 +131,7 @@ def project_create(request):
         description=description,
         owner=request.user,
     )
+    project.members.add(request.user)
 
     return JsonResponse({
         "id": project.id,
@@ -140,3 +142,81 @@ def project_create(request):
         status=201,
     )
 
+@csrf_exempt
+def project_members(request, project_id):
+    print("PROJECT MEMBERS:", request.method, project_id)
+    if request.method not in ["GET", "POST", "DELETE"]:
+        return JsonResponse({
+            "error": "Method not allowed"
+        },status=405)
+
+
+    try:
+        project=Project.objects.get(id=project_id)
+        owner=project.owner
+    except Project.DoesNotExist:
+        return JsonResponse({
+            "error": "Project does not exist"
+        },status=404)
+ 
+    user=request.user
+
+    if not user.is_authenticated:
+        return JsonResponse({
+            "error": "Please login."
+        },status=401)
+
+    if request.method == "POST":
+        if owner != user:
+            return JsonResponse({
+                "error": "You do not have permission."
+            },status=403)
+        #check user_id exists and is an actual nunmber
+        try:
+            body=json.loads(request.body)
+            new_member_id=body["user_id"]
+
+            if not isinstance(new_member_id, int):
+                return JsonResponse({
+                    "error": "Field must be an integer"
+                },status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({
+                "error": "Invalid json"
+            },status=400)
+        except KeyError:
+            return JsonResponse({
+                "error": "User id must be provided"
+            },status=400)
+
+        #check user exists
+        try:
+            new_member=User.objects.get(id=new_member_id)
+        except User.DoesNotExist:
+            return JsonResponse({
+                "error": "This user does not exist"
+            },status=404)
+
+        #check does not already exist
+        if project.members.filter(id=new_member_id).exists():
+            return JsonResponse({
+                "error": "User already part of project",
+                "username": new_member.username
+            },status=400)
+        
+        project.members.add(new_member)
+        return JsonResponse({
+            "message": "User successfully added to project",
+            "username": new_member.username
+        })
+
+    #list of project members
+    if request.method == "GET":
+        return JsonResponse({
+            "error": "Method not implemented"
+        },status=501)
+
+    if request.method == "DELETE":
+        return JsonResponse({
+            "error": "Method not implemented"
+        },status=501)
