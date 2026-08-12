@@ -22,8 +22,8 @@ def project_list(request):
 
 @csrf_exempt
 def project_detail(request, project_id):
-    if request.method != "GET" and request.method != "DELETE" and request.method != "PUT":
-        return JsonResponse({
+    if request.method not in ["GET", "DELETE", "PATCH"]:
+       return JsonResponse({
             "error": "Method not allowed"
         }, status=405)
     
@@ -60,36 +60,43 @@ def project_detail(request, project_id):
             "message": "Project delete"
         }, status=200)
 
-    if request.method == "PUT":
+    if request.method =="PATCH":
+        user=request.user
+        if not user.is_authenticated:
+            return JsonResponse({
+                "error": "User not logged in."
+            },status=401)
+        if user != project.owner:
+            return JsonResponse({
+                "error": "Permission not granted"
+            },status=403)
         try:
             body=json.loads(request.body)
         except json.JSONDecodeError:
             return JsonResponse({
                 "error": "Invalid json"
-            }, status=400)
-       
-        try:
-            project.name=body["name"]
-            project.description=body["description"]
-            if project.name == "":
+            },status=400)
+
+        if "name" in body:
+            if body["name"] == "":
                 return JsonResponse({
-                    "error": "a project name is required"
+                    "error": "A project name cannot be empty."
                 },status=400)
-            project.save()
+            project.name=body["name"]
 
-            return JsonResponse({
-                "message": "Updated",
-                "id": project.id,
-                "name": project.name,
-                "description": project.description,
-                "created_at": project.created_at,
-            }, status=200)
-        except KeyError:
-            return JsonResponse({
-                "message": "fields missing"
-            }, status=400)
+            
+        if "description" in body:
+            project.description=body["description"]
 
-
+        project.save()
+        
+        return JsonResponse({
+                    "message": "Updated",
+                    "id": project.id,
+                    "name": project.name,
+                    "description": project.description,
+                    "created_at": project.created_at,
+                    }, status=200)
 
 @csrf_exempt
 def project_create(request):
