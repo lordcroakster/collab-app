@@ -6,7 +6,7 @@ from django.http import JsonResponse
 import json
 
 
-# Create your views here.
+#view all project tasks/create new task
 @csrf_exempt
 def task_list_create(request, project_id):
     if request.method != "GET" and request.method != "POST":
@@ -14,12 +14,27 @@ def task_list_create(request, project_id):
                     "error": "Method not allowed"
                 }, status=405)
 
+    #check project exists
     try:
         project=Project.objects.get(id=project_id)
     except Project.DoesNotExist:
         return JsonResponse({
             "error": "Project does not exist."
         }, status=404)
+
+    #check user is logged in
+    user=request.user
+    if not user.is_authenticated:
+        return JsonResponse({
+            "error": "Please login"
+        },status=401)
+
+    #check if user is a member
+    if not project.members.filter(id=user.id).exists():
+        return JsonResponse({
+            "error": "You do not have permission to view this project"
+        },status=403)
+
 
     if request.method == "GET":
         tasks=Task.objects.filter(project_id=project_id)

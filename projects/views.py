@@ -5,8 +5,7 @@ from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 import json
 
-# Create your views here.
-
+#list of all projects
 def project_list(request):
     projects=Project.objects.all()
     data=[]
@@ -21,6 +20,7 @@ def project_list(request):
 
     return JsonResponse(data, safe=False)
 
+#view project dtails, delete project/edit details if owner
 @csrf_exempt
 def project_detail(request, project_id):
     if request.method not in ["GET", "DELETE", "PATCH"]:
@@ -99,6 +99,7 @@ def project_detail(request, project_id):
                     "created_at": project.created_at,
                     }, status=200)
 
+#creates project and assigns owner
 @csrf_exempt
 def project_create(request):
     if request.method != "POST":
@@ -142,6 +143,7 @@ def project_create(request):
         status=201,
     )
 
+#view members and add members via body
 @csrf_exempt
 def project_members(request, project_id):
     if request.method not in ["GET", "POST", "DELETE"]:
@@ -223,6 +225,7 @@ def project_members(request, project_id):
             "error": "Permission denied"
         },status=403)
 
+#delete project members using url parameter
 @csrf_exempt
 def project_members_delete(request, project_id, user_id):
     if request.method != "DELETE":
