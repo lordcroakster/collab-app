@@ -144,12 +144,10 @@ def project_create(request):
 
 @csrf_exempt
 def project_members(request, project_id):
-    print("PROJECT MEMBERS:", request.method, project_id)
     if request.method not in ["GET", "POST", "DELETE"]:
         return JsonResponse({
             "error": "Method not allowed"
         },status=405)
-
 
     try:
         project=Project.objects.get(id=project_id)
@@ -212,11 +210,61 @@ def project_members(request, project_id):
 
     #list of project members
     if request.method == "GET":
-        return JsonResponse({
-            "error": "Method not implemented"
-        },status=501)
+        if project.members.filter(id=user.id).exists():
+            data=[]
+            for member in project.members.all():
+                data.append({
+                    "id": member.id,
+                    "username": member.username
+                })
+            return JsonResponse(data, safe=False)
 
-    if request.method == "DELETE":
         return JsonResponse({
-            "error": "Method not implemented"
-        },status=501)
+            "error": "Permission denied"
+        },status=403)
+
+@csrf_exempt
+def project_members_delete(request, project_id, user_id):
+    if request.method != "DELETE":
+        return JsonResponse({
+            "error": "Method not allowed"
+        },status=405)
+
+    try:
+        project=Project.objects.get(id=project_id)
+        owner=project.owner
+    except Project.DoesNotExist:
+        return JsonResponse({
+            "error": "Project does not exist"
+        },status=404)
+ 
+    user=request.user
+
+    if not user.is_authenticated:
+        return JsonResponse({
+            "error": "Please login."
+        },status=401)
+
+    if user != owner:
+        return JsonResponse({
+            "error": "Permission denied"
+        },status=403)
+
+    try:
+        target_user=project.members.get(id=user_id)
+    except User.DoesNotExist:
+        return JsonResponse({
+            "error": "User is not a member"
+        },status=404)
+
+    if target_user == owner:
+        return JsonResponse({
+                "error": "You may not remove yourself from your project."
+        },status=400)
+
+    project.members.remove(target_user)
+    return JsonResponse({
+        "message": "User removed",
+        "id": target_user.id,
+        "username": target_user.username
+    },status=200)
