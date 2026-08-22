@@ -49,7 +49,28 @@ def task_list_create(request, project_id):
         return JsonResponse(data, safe=False)
 
     if request.method == "POST":
-        body=json.loads(request.body)
+        try:
+            body=json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({
+                "error": "Invalid json"
+            },status=400)
+
+        if "name" not in body or "description" not in body:
+            return JsonResponse({
+                "error": "Name and description required"
+            },status=400)
+
+        if not isinstance(body["name"], str) or not isinstance (body["description"], str):
+            return JsonResponse({
+                "error": "Name and description must be strings"
+            },status=400)
+
+        if body["name"] == "":
+            return JsonResponse({
+                "error": "Name field cannot be empty"
+            },status=400)
+
         new_task=Task.objects.create(
             name=body["name"],
             description=body["description"],
@@ -63,19 +84,33 @@ def task_list_create(request, project_id):
             "name": new_task.name
         }, status=201)
 
+#get informatino about a specific task, delete  a task, edit a task
 @csrf_exempt
 def task_detail(request, project_id, task_id):
-    if request.method != "GET" and request.method != "DELETE" and request.method != "PATCH":
+    if request.method not in ("GET", "DELETE", "PATCH"):
         return JsonResponse({
             "error": "Method not allowed"
             }, status=405)
 
+    user=request.user
+    if not user.is_authenticated:
+        return JsonResponse({
+            "error": "Please log in"
+        },status=401)
+
+
+    #check if task exists
     try:
         task=Task.objects.get(id=task_id, project_id=project_id)
     except Task.DoesNotExist:
         return JsonResponse({
             "error": "Task does not belong to this project/project doesn't exist"
         }, status=404)
+    
+    if not task.project.members.filter(id=user.id).exists():
+        return JsonResponse({
+            "error": "You are not a member of this project."
+        },status=403)
 
 
     if request.method == "GET":
@@ -85,7 +120,8 @@ def task_detail(request, project_id, task_id):
             "description": task.description,
             "completed": task.completed,
             "created_at": task.created_at,
-        })
+        },status=200)
+
 
     if request.method == "DELETE":
         task.delete()
@@ -103,6 +139,10 @@ def task_detail(request, project_id, task_id):
             }, status=400)
 
         if "name" in body:
+            if not isinstance(body["name"], str):
+                return JsonResponse({
+                    "errpr": "Name must be a string"
+                },status=400)
             if body["name"] == "":
                 return JsonResponse({
                     "error": "Task must have a name"
@@ -111,6 +151,10 @@ def task_detail(request, project_id, task_id):
             task.name=body["name"]
 
         if "description" in body:
+            if not isinstance(body["description"], str):
+                return JsonResponse({
+                "errpr": "Description must be a string"
+                },status=400)
             task.description=body["description"]
 
         if "completed" in body:
