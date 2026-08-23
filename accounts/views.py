@@ -57,3 +57,7 @@ def logout_view(request):
     return JsonResponse({
         "message": "Successfully logged out"
     },status=200)
+
+@csrf_exempt
+def render_login(request):
+    return render(request, "accounts/login.html")
