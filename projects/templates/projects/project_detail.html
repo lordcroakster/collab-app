@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Login</title>
+    
+</head>
+<body>
+    <h1>Project {{ project_id }}</h1>
+    <div id="task-list"></div>
+
+    
+    <script>
+        async function loadTask(){
+            const project_id="{{ project_id }}";
+
+            const response=await fetch("/api/projects/" + project_id + "/tasks/");
+            const data=await response.json();
+
+            const taskList=document.getElementById("task-list");
+
+            //create list of clicktable tasks
+            data.forEach(function(task){
+                const taskElement=document.createElement("a");
+                taskElement.innerText=task.name;
+                taskElement.href="/api/projects/" + project_id + "/tasks/" + task.id + "/task-detail/"
+                taskList.append(taskElement);
+            });
+        };
+
+        loadTask()
+    </script>
+</body>
+
+
+</html>

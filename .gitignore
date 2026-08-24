@@ -7,7 +7,7 @@ __pycache__/
 
 #env variables
 .env
-
+pyth
 #django local database
 db.sqlite3
 

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+    <h1>Project {{ project_id }}, Task {{ task_id }}</h1>
+
+    <h1 id="task-name"></h1>
+    <p id="task-description"></p>
+    <p id="task-completed"></p>
+
+
+    <script>
+        const project_id="{{ project_id }}";
+        const task_id="{{ task_id }}";
+
+        async function loadTasks(){
+            const response=await fetch("/api/projects/" + project_id + "/tasks/" + task_id + "/");
+            const data=await response.json();
+
+            const nameElement=document.getElementById("task-name");
+            const descriptionElement=document.getElementById("task-description");
+            const completedElement=document.getElementById("task-completed");
+            
+            nameElement.innerText=data.name;
+            descriptionElement.innerText=data.description;
+            
+            if (data.completed==false){
+                completedElement.innerText="False";
+            }else{
+                completedElement.innerText="True";
+            };
+        }
+
+        loadTasks();
+    </script>
+
+
+</body>
+
+</html>

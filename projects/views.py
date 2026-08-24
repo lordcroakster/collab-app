@@ -275,3 +275,11 @@ def project_members_delete(request, project_id, user_id):
 @csrf_exempt
 def render_project_list(request):
     return render(request, "projects/project_list.html")
+
+@csrf_exempt
+def render_project_detail(request, project_id):
+    return render(request,
+                  "projects/project_detail.html",
+                  {
+                      "project_id": project_id
+                  })

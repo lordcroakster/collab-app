@@ -42,7 +42,7 @@ def task_list_create(request, project_id):
         data=[]
         for task in tasks:
             data.append({
-                    "task_id": task.id,
+                    "id": task.id,
                     "name": task.name
                 })
 
@@ -141,7 +141,7 @@ def task_detail(request, project_id, task_id):
         if "name" in body:
             if not isinstance(body["name"], str):
                 return JsonResponse({
-                    "errpr": "Name must be a string"
+                    "error": "Name must be a string"
                 },status=400)
             if body["name"] == "":
                 return JsonResponse({
@@ -153,7 +153,7 @@ def task_detail(request, project_id, task_id):
         if "description" in body:
             if not isinstance(body["description"], str):
                 return JsonResponse({
-                "errpr": "Description must be a string"
+                "error": "Description must be a string"
                 },status=400)
             task.description=body["description"]
 
@@ -173,3 +173,12 @@ def task_detail(request, project_id, task_id):
             "completed": task.completed
         }, status=200)
 
+@csrf_exempt
+def render_task_detail(request, project_id, task_id):
+    return render(request,
+                  "tasks/task-list.html",
+                    {
+                        "project_id": project_id,
+                        "task_id": task_id
+                    }
+                  )

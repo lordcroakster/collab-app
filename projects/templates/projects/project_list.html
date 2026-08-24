@@ -18,8 +18,9 @@
         const projectList=document.getElementById("project-list")
         
         data.forEach(function(project){
-            const projectElement=document.createElement("p");
+            const projectElement=document.createElement("a");
             projectElement.innerText=project.name
+            projectElement.href="/api/projects/" + project.id + "/project-detail/"
             projectList.append(projectElement)
         });
     };
