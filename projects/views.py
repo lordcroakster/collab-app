@@ -271,3 +271,7 @@ def project_members_delete(request, project_id, user_id):
         "id": target_user.id,
         "username": target_user.username
     },status=200)
+
+@csrf_exempt
+def render_project_list(request):
+    return render(request, "projects/project_list.html")

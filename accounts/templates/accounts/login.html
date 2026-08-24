@@ -39,7 +39,7 @@
         const data=await response.json()
 
         if(response.ok){
-            console.log(data)
+            window.location.href="/api/projects/project-list/"
         }else{
             console.log(data)
         }
