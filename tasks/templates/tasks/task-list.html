@@ -8,34 +8,170 @@
 <body>
     <h1>Project {{ project_id }}, Task {{ task_id }}</h1>
 
+    <h2>Edit Task</h2>
+    <form id="edit-name-form">
+        <label>Name</label>
+        <input type="text" id="name-input">
+        
+        <button type="submit">Confirm</button>
+    </form>
+    <form id="edit-description-form">
+        <label>Description</label>
+        <input type="text" id="description-input">
+        
+        <button type="submit">Confirm</button>
+    </form>
+    <form id="edit-completed-form">
+        <label>Completed</label>
+        <input type="checkbox" id="completed-input">
+        
+        <button type="submit">Confirm</button>
+    </form>
+
     <h1 id="task-name"></h1>
     <p id="task-description"></p>
     <p id="task-completed"></p>
 
+    <form id="delete-form">
+        <button type="submit">Delete Task</button>
+    </form>
 
     <script>
         const project_id="{{ project_id }}";
         const task_id="{{ task_id }}";
+        const editNameForm=document.getElementById("edit-name-form");
+        const editDescriptionForm=document.getElementById("edit-description-form");
+        const editCompletedForm=document.getElementById("edit-completed-form");
+        
+    
+        //display of task info
+        const nameElement=document.getElementById("task-name");
+        const descriptionElement=document.getElementById("task-description");
+        const completedElement=document.getElementById("task-completed");
 
-        async function loadTasks(){
+        //edit form values
+        const nameInput=document.getElementById("name-input");
+        const descriptionInput=document.getElementById("description-input");
+        const completedInput=document.getElementById("completed-input");
+
+        //delete form
+        const deleteForm=document.getElementById("delete-form");
+
+        async function loadDetails(){
             const response=await fetch("/api/projects/" + project_id + "/tasks/" + task_id + "/");
             const data=await response.json();
 
-            const nameElement=document.getElementById("task-name");
-            const descriptionElement=document.getElementById("task-description");
-            const completedElement=document.getElementById("task-completed");
+
             
             nameElement.innerText=data.name;
             descriptionElement.innerText=data.description;
             
             if (data.completed==false){
-                completedElement.innerText="False";
+                completedElement.innerText="false";
             }else{
                 completedElement.innerText="True";
             };
         }
 
-        loadTasks();
+        //the next 3 functions allow changes to be made to the task
+        //this will eventually be replaced with a more efficient method
+        //of rerouting to an edit page and having a singular form
+        editNameForm.addEventListener("submit", async function(event){
+            event.preventDefault();
+
+            if(nameInput.value!=""){
+                const response=await fetch("/api/projects/" + project_id + "/tasks/" + task_id + "/", 
+                    {
+                        method: "PATCH",
+                        body: JSON.stringify(
+                            {
+                                name: nameInput.value
+                            }
+                        ),
+                        headers: {
+                            "Content-Type": "application/json"
+                        }
+                    }
+                );
+
+                if(response.ok){
+                    nameInput.value="";
+                
+                    nameElement.innerHTML="";
+                    loadDetails();
+                }
+            }
+        });
+
+        editDescriptionForm.addEventListener("submit", async function(event){
+            event.preventDefault();
+
+            const response=await fetch("/api/projects/" + project_id + "/tasks/" + task_id + "/", 
+                {
+                    method: "PATCH",
+                    body: JSON.stringify(
+                        {
+                            description: descriptionInput.value
+                        }
+                    ),
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }
+
+            );
+
+            if(response.ok){
+                descriptionInput.value="";
+            
+                descriptionElement.innerHTML="";
+                loadDetails();
+            }
+        });
+
+        
+        editCompletedForm.addEventListener("submit", async function(event){
+            event.preventDefault();
+
+            const response=await fetch("/api/projects/" + project_id + "/tasks/" + task_id + "/", 
+                {
+                    method: "PATCH",
+                    body: JSON.stringify(
+                        {
+                            completed: completedInput.checked
+                        }
+                    ),
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }
+
+            );
+
+            if(response.ok){
+                completedInput.checked=false;
+            
+                completedElement.innerHTML="";
+                loadDetails();
+            }
+        });
+
+        deleteForm.addEventListener("submit", async function(event){
+            event.preventDefault();
+
+            const response=await fetch("/api/projects/" + project_id + "/tasks/" + task_id + "/", 
+                {
+                    method: "DELETE",
+                }
+            );
+            if (response.ok){
+                window.location.href="/api/projects/" + project_id + "/project-detail/";
+            }
+        })
+
+        loadDetails();
+
+
     </script>
 
 
