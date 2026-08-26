@@ -6,30 +6,77 @@
 	<title>Login</title>
     
 </head>
+
 <body>
     <h1>Project {{ project_id }}</h1>
-    <div id="task-list"></div>
+    <form id="create-task-form">
+        <h2>New Task</h2>
+        <label>Task Name</label>
+        <input type="text" id="task-name">
+
+        <label>Task Description</label>
+        <input type="text" id="task-description">
+
+        <button type="submit">Create</button>
+    </form>
+
+    <h2>Tasks</h2>
+    <div id="task-list">
+        
+    </div>
 
     
     <script>
-        async function loadTask(){
-            const project_id="{{ project_id }}";
+        const project_id="{{ project_id }}";
+        const create_task_form=document.getElementById("create-task-form");
+        const taskList=document.getElementById("task-list");
 
+
+        async function loadTasks(){
             const response=await fetch("/api/projects/" + project_id + "/tasks/");
             const data=await response.json();
-
-            const taskList=document.getElementById("task-list");
 
             //create list of clicktable tasks
             data.forEach(function(task){
                 const taskElement=document.createElement("a");
+                const breakElement=document.createElement("br");
                 taskElement.innerText=task.name;
                 taskElement.href="/api/projects/" + project_id + "/tasks/" + task.id + "/task-detail/"
                 taskList.append(taskElement);
+                taskList.append(breakElement);
             });
         };
 
-        loadTask()
+        create_task_form.addEventListener("submit", async function(event){
+            event.preventDefault();
+            const taskName=document.getElementById("task-name");
+            const taskDescription=document.getElementById("task-description");
+
+            const response=await fetch("/api/projects/" + project_id + "/tasks/", {
+                method: "POST",
+                body: JSON.stringify({
+                    name: taskName.value,
+                    description: taskDescription.value
+                }),
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            });
+            const data=await response.json();
+
+            if(response.ok){
+                console.log("created");
+                taskName.value="";
+                taskDescription.value="";
+                taskList.innerHTML="";
+                loadTasks();
+            }else{
+                console.log("error");
+            }
+
+        });
+
+        loadTasks()
     </script>
 </body>
 
